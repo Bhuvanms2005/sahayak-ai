@@ -1,50 +1,80 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
+
 import '../models/user_model.dart';
+import '../services/firestore_service.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
-
+  final FirestoreService _firestore = FirestoreService();
   AuthStatus _status = AuthStatus.initial;
   UserModel? _user;
   String? _errorMessage;
+
+  AuthProvider() {
+    _bootstrap();
+  }
 
   AuthStatus get status => _status;
   UserModel? get user => _user;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
+  bool get canUseFirebase => Firebase.apps.isNotEmpty;
 
-  AuthProvider() {
-    _listenToAuthChanges();
-  }
-
-  void _listenToAuthChanges() {
-    _authService.authStateChanges.listen((User? firebaseUser) async {
-      if (firebaseUser != null) {
-        await _loadUserData(firebaseUser.uid);
-      } else {
+  void _bootstrap() {
+    if (!canUseFirebase) {
+      _status = AuthStatus.unauthenticated;
+      return;
+    }
+    fb.FirebaseAuth.instance.authStateChanges().listen((firebaseUser) async {
+      if (firebaseUser == null) {
         _user = null;
         _status = AuthStatus.unauthenticated;
-        notifyListeners();
+      } else {
+        _user = await _loadOrCreateUser(firebaseUser);
+        _status = AuthStatus.authenticated;
       }
+      notifyListeners();
     });
   }
 
-  Future<void> _loadUserData(String uid) async {
+  Future<UserModel> _loadOrCreateUser(fb.User firebaseUser) async {
+    final existing = await _firestore.getUser(firebaseUser.uid);
+    if (existing != null) return existing;
+    final created = UserModel(
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName ?? 'Citizen',
+      email: firebaseUser.email ?? '',
+      createdAt: DateTime.now(),
+    );
+    await _firestore.createUser(created);
+    return created;
+  }
+
+  Future<bool> signIn({required String email, required String password}) async {
+    _setLoading();
     try {
-      _user = await _firestoreService.getUser(uid);
+      if (canUseFirebase) {
+        final credential = await fb.FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email.trim(),
+          password: password,
+        );
+        _user = await _loadOrCreateUser(credential.user!);
+      } else {
+        _user = _demoUser(email);
+      }
       _status = AuthStatus.authenticated;
       notifyListeners();
+      return true;
+    } on fb.FirebaseAuthException catch (e) {
+      _setError(_friendlyAuthError(e));
+      return false;
     } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = e.toString();
-      notifyListeners();
+      _setError(e.toString());
+      return false;
     }
   }
 
@@ -53,92 +83,109 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
+    _setLoading();
     try {
-      _user = await _authService.signUpWithEmail(
-        name: name,
-        email: email,
-        password: password,
-      );
+      if (canUseFirebase) {
+        final credential = await fb.FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email.trim(),
+          password: password,
+        );
+        await credential.user?.updateDisplayName(name);
+        _user = UserModel(
+          uid: credential.user!.uid,
+          name: name,
+          email: email.trim(),
+          createdAt: DateTime.now(),
+        );
+        await _firestore.createUser(_user!);
+      } else {
+        _user = _demoUser(email, name: name);
+      }
       _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
+    } on fb.FirebaseAuthException catch (e) {
+      _setError(_friendlyAuthError(e));
+      return false;
     } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = e.toString();
-      notifyListeners();
+      _setError(e.toString());
       return false;
     }
   }
 
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
+  Future<bool> resetPassword(String email) async {
+    _setLoading();
     try {
-      _user = await _authService.signInWithEmail(
-        email: email,
-        password: password,
-      );
-      _status = AuthStatus.authenticated;
+      if (canUseFirebase) {
+        await fb.FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
+      }
+      _status = AuthStatus.unauthenticated;
       notifyListeners();
       return true;
     } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = e.toString();
-      notifyListeners();
+      _setError(e.toString());
       return false;
     }
   }
 
   Future<void> signOut() async {
-    await _authService.signOut();
+    if (canUseFirebase) await fb.FirebaseAuth.instance.signOut();
     _user = null;
     _status = AuthStatus.unauthenticated;
     notifyListeners();
   }
 
-  Future<bool> resetPassword(String email) async {
-    _status = AuthStatus.loading;
-    notifyListeners();
-    try {
-      await _authService.resetPassword(email);
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _status = AuthStatus.error;
-      _errorMessage = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
   Future<void> updateUserProfile(UserModel updatedUser) async {
-    try {
-      await _firestoreService.updateUser(updatedUser);
-      _user = updatedUser;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
+    _user = updatedUser.copyWith(updatedAt: DateTime.now());
+    notifyListeners();
+    if (canUseFirebase) await _firestore.updateUser(_user!);
   }
 
   void clearError() {
     _errorMessage = null;
     if (_status == AuthStatus.error) {
-      _status = _user != null
-          ? AuthStatus.authenticated
-          : AuthStatus.unauthenticated;
+      _status = _user == null ? AuthStatus.unauthenticated : AuthStatus.authenticated;
     }
     notifyListeners();
+  }
+
+  UserModel _demoUser(String email, {String name = 'Demo Citizen'}) {
+    return UserModel(
+      uid: 'demo-user',
+      name: name,
+      email: email.trim().isEmpty ? 'demo@sahayak.ai' : email.trim(),
+      state: 'Karnataka',
+      occupation: 'Student',
+      annualIncome: 240000,
+      category: 'General',
+      createdAt: DateTime.now(),
+    );
+  }
+
+  void _setLoading() {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  void _setError(String message) {
+    _status = AuthStatus.error;
+    _errorMessage = message;
+    notifyListeners();
+  }
+
+  String _friendlyAuthError(fb.FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account exists for this email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'email-already-in-use':
+        return 'An account already exists for this email.';
+      case 'weak-password':
+        return 'Use at least 6 characters for the password.';
+      default:
+        return e.message ?? 'Authentication failed. Please try again.';
+    }
   }
 }

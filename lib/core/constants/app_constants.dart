@@ -1,92 +1,118 @@
+import '../../models/scheme_model.dart';
+
 class AppConstants {
-  // App Info
-  static const String appName = 'Sahayak AI';
-  static const String appTagline = 'Your Government Scheme Navigator';
-  static const String teamName = 'IntelliFusion';
-  static const String appVersion = '1.0.0';
+  static const appName = 'Sahayak AI';
+  static const appTagline = 'AI-powered Government Scheme Navigator';
+  static const geminiApiKey = 'PASTE_YOUR_GEMINI_API_KEY_HERE';
+  static const geminiModel = 'gemini-1.5-flash';
 
-  // Gemini
-  static const String geminiModel = 'gemini-1.5-flash';
-  static const int geminiMaxTokens = 2048;
-  static const double geminiTemperature = 0.7;
+  static const usersCollection = 'users';
+  static const schemesCollection = 'schemes';
+  static const savedSchemesCollection = 'saved_schemes';
 
-  // Firestore Collections
-  static const String usersCollection = 'users';
-  static const String schemesCollection = 'schemes';
-  static const String savedSchemesCollection = 'saved_schemes';
-  static const String chatHistoryCollection = 'chat_history';
-  static const String notificationsCollection = 'notifications';
-
-  // SharedPreferences Keys
-  static const String keyOnboardingComplete = 'onboarding_complete';
-  static const String keyThemeMode = 'theme_mode';
-  static const String keyLanguage = 'language';
-  static const String keyUserProfile = 'user_profile';
-
-  // Scheme Categories
-  static const List<String> schemeCategories = [
-    'Agriculture',
+  static const categories = [
+    'All',
     'Education',
     'Health',
+    'Agriculture',
+    'Women',
+    'Startup',
     'Housing',
     'Employment',
-    'Women',
     'Senior Citizens',
-    'Startup',
-    'Social Welfare',
-    'Financial Inclusion',
   ];
 
-  // Supported Languages
-  static const Map<String, String> supportedLanguages = {
-    'en': 'English',
-    'hi': 'हिन्दी',
-    'kn': 'ಕನ್ನಡ',
-    'ta': 'தமிழ்',
-    'te': 'తెలుగు',
-    'mr': 'मराठी',
-    'bn': 'বাংলা',
-    'gu': 'ગુજરાતી',
-  };
-
-  // Gemini System Prompt
-  static const String geminiSystemPrompt = '''
-You are Sahayak AI, an expert assistant for Indian government welfare schemes. 
-Your role is to help citizens discover, understand, and apply for government schemes.
-
-GUIDELINES:
-- Always respond in a friendly, clear, and simple language
-- Provide accurate information about government schemes
-- When recommending schemes, always structure your response as follows:
-
-**Scheme Name:** [Name]
-**Eligibility Status:** [Eligible/Not Eligible/Partially Eligible]
-**Key Benefits:** [List main benefits]
-**Required Documents:** [List documents]
-**Application Steps:** [Step-by-step guide]
-**Official Link:** [URL if available]
-
-- If the user is not eligible, explain why and suggest alternative schemes
-- Always prioritize schemes that are currently active
-- Be sensitive to the user's socio-economic background
-- If asked in Hindi or regional languages, respond in that language
-- Never make up scheme details — only provide verified information
+  static const systemPrompt = '''
+You are Sahayak AI, a helpful assistant for Indian government schemes.
+Give practical, simple, citizen-friendly guidance. Ask for missing profile
+details when eligibility is unclear. Never invent official rules; clearly say
+when the user should verify details on the official portal.
 ''';
 
-  // Sample Scheme Prompt Template
-  static const String schemeRecommendationPrompt = '''
-Based on the following user profile, recommend the most relevant Indian government schemes:
-
-User Profile:
-- Name: {name}
-- Age: {age}
-- Gender: {gender}
-- State: {state}
-- Occupation: {occupation}
-- Annual Income: ₹{income}
-- Category: {category}
-- Education: {education}
-
-Please provide top 5 most relevant schemes with complete details.
-''';
+  static const demoSchemes = <SchemeModel>[
+    SchemeModel(
+      id: 'pm-kisan',
+      name: 'PM-KISAN Samman Nidhi',
+      description: 'Income support for eligible farmer families across India.',
+      category: 'Agriculture',
+      benefits: 'Rs 6,000 per year in three equal installments directly to the bank account.',
+      eligibility: 'Small and marginal farmer families with cultivable land, subject to exclusions.',
+      documents: ['Aadhaar card', 'Land records', 'Bank passbook', 'Mobile number'],
+      targetGroups: ['Farmers', 'Rural families'],
+      ministry: 'Ministry of Agriculture and Farmers Welfare',
+      applicationMode: 'Online or CSC',
+      deadline: 'Open all year',
+      popularity: 96,
+    ),
+    SchemeModel(
+      id: 'ayushman-bharat',
+      name: 'Ayushman Bharat PM-JAY',
+      description: 'Health insurance coverage for vulnerable families.',
+      category: 'Health',
+      benefits: 'Cashless health cover up to Rs 5 lakh per family per year at empanelled hospitals.',
+      eligibility: 'Families identified through deprivation and occupational criteria in SECC data.',
+      documents: ['Aadhaar card', 'Ration card', 'PM-JAY card if available'],
+      targetGroups: ['Low-income families', 'Patients'],
+      ministry: 'National Health Authority',
+      applicationMode: 'Hospital helpdesk or online verification',
+      deadline: 'Open all year',
+      popularity: 94,
+    ),
+    SchemeModel(
+      id: 'sukanya-samriddhi',
+      name: 'Sukanya Samriddhi Yojana',
+      description: 'Long-term savings scheme for the education and future of girl children.',
+      category: 'Women',
+      benefits: 'High-interest small savings account with tax benefits for a girl child.',
+      eligibility: 'Girl child below 10 years; account opened by parent or guardian.',
+      documents: ['Birth certificate', 'Guardian ID proof', 'Address proof'],
+      targetGroups: ['Girl child', 'Parents'],
+      ministry: 'Ministry of Finance',
+      applicationMode: 'Post office or authorised bank',
+      deadline: 'Before child turns 10',
+      popularity: 88,
+    ),
+    SchemeModel(
+      id: 'pmay-urban',
+      name: 'Pradhan Mantri Awas Yojana',
+      description: 'Affordable housing support for eligible urban and rural households.',
+      category: 'Housing',
+      benefits: 'Interest subsidy and housing assistance depending on category and location.',
+      eligibility: 'Households without a pucca house, meeting income and ownership rules.',
+      documents: ['Aadhaar card', 'Income certificate', 'Address proof', 'Bank details'],
+      targetGroups: ['Low-income households', 'Urban poor', 'Rural families'],
+      ministry: 'Ministry of Housing and Urban Affairs',
+      applicationMode: 'Online portal or local body',
+      deadline: 'As per state notification',
+      popularity: 91,
+    ),
+    SchemeModel(
+      id: 'mudra',
+      name: 'Pradhan Mantri Mudra Yojana',
+      description: 'Collateral-free loans for micro and small business owners.',
+      category: 'Startup',
+      benefits: 'Loans up to Rs 10 lakh under Shishu, Kishor, and Tarun categories.',
+      eligibility: 'Non-corporate, non-farm micro enterprises and small entrepreneurs.',
+      documents: ['Business plan', 'Identity proof', 'Address proof', 'Bank statements'],
+      targetGroups: ['Entrepreneurs', 'Small businesses', 'Self-employed'],
+      ministry: 'Ministry of Finance',
+      applicationMode: 'Bank, NBFC, MFI, or online',
+      deadline: 'Open all year',
+      popularity: 89,
+    ),
+    SchemeModel(
+      id: 'nsp-scholarship',
+      name: 'National Scholarship Portal Schemes',
+      description: 'Central and state scholarships for students across categories.',
+      category: 'Education',
+      benefits: 'Tuition support, maintenance allowance, and direct benefit transfer.',
+      eligibility: 'Students meeting income, merit, category, and course rules for each scholarship.',
+      documents: ['Aadhaar card', 'Income certificate', 'Marksheets', 'Bank details'],
+      targetGroups: ['Students', 'Minority students', 'SC/ST/OBC students'],
+      ministry: 'Ministry of Education',
+      applicationMode: 'Online',
+      deadline: 'Varies by scholarship',
+      popularity: 87,
+    ),
+  ];
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../home/home_screen.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,11 +14,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+    Future<void>.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) context.go('/onboarding');
     });
   }
 
@@ -25,34 +23,38 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryContainer],
+            colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.teal],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.assistant, size: 80, color: Colors.white),
-            SizedBox(height: 20),
-            Text(
-              "Sahayak AI",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                fontFamily: 'PlusJakartaSans',
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.16),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 64),
               ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Your Digital Government Concierge",
-              style: TextStyle(color: Colors.white70),
-            ),
-          ],
+              const SizedBox(height: 22),
+              Text(
+                'Sahayak AI',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Your Government Scheme Navigator', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
         ),
       ),
     );
