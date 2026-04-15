@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "174887975706",
+    "project_id": "sahayak-ai-b5bbb",
+    "storage_bucket": "sahayak-ai-b5bbb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174887975706:android:7ac630cfa2580948b30aa3",
+        "android_client_info": {
+          "package_name": "com.example.sahayakai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUJrOG5o-4l-f28M1vMKUq6xOkjAlmv1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

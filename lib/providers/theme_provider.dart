@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
+// NOTE: shared_preferences must be in pubspec.yaml (see fixed pubspec below)
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/constants/app_constants.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  static const _keyThemeMode = 'theme_mode'; // defined locally — no AppConstants needed
+
   ThemeMode _themeMode = ThemeMode.light;
 
   ThemeMode get themeMode => _themeMode;
@@ -14,7 +17,7 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(AppConstants.keyThemeMode);
+    final saved = prefs.getString(_keyThemeMode);
     if (saved == 'dark') {
       _themeMode = ThemeMode.dark;
     } else if (saved == 'system') {
@@ -30,7 +33,7 @@ class ThemeProvider extends ChangeNotifier {
         _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-      AppConstants.keyThemeMode,
+      _keyThemeMode,
       _themeMode == ThemeMode.dark ? 'dark' : 'light',
     );
     notifyListeners();
@@ -39,7 +42,7 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setTheme(ThemeMode mode) async {
     _themeMode = mode;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.keyThemeMode, mode.name);
+    await prefs.setString(_keyThemeMode, mode.name);
     notifyListeners();
   }
 }

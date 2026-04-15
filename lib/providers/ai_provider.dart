@@ -1,47 +1,38 @@
 import 'package:flutter/material.dart';
-import '../services/gemini_service.dart';
+
+import '../core/services/gemini_service.dart';
 import '../models/chat_message_model.dart';
-import '../models/user_model.dart';
 import '../models/scheme_model.dart';
+import '../models/user_model.dart';
 
 class AiProvider extends ChangeNotifier {
-  final GeminiService _geminiService = GeminiService.instance;
+  // Uses the actual GeminiService from core/services (no singleton .instance)
+  final GeminiService _geminiService = GeminiService();
 
-  List<ChatMessage> _messages = [];
+  final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String? _error;
   String? _eligibilityResult;
   bool _isCheckingEligibility = false;
 
-  List<ChatMessage> get messages => _messages;
+  List<ChatMessage> get messages => List.unmodifiable(_messages);
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get eligibilityResult => _eligibilityResult;
   bool get isCheckingEligibility => _isCheckingEligibility;
 
   AiProvider() {
-    _initGemini();
     _addWelcomeMessage();
-  }
-
-  void _initGemini() {
-    try {
-      _geminiService.initialize();
-      _geminiService.startNewChat();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
   }
 
   void _addWelcomeMessage() {
     _messages.add(ChatMessage.assistant(
       'Namaste! 🙏 I am Sahayak AI, your personal Government Scheme Assistant.\n\n'
       'I can help you:\n'
-      '• **Discover** government schemes suitable for you\n'
-      '• **Check** your eligibility for specific schemes\n'
-      '• **Understand** application procedures\n'
-      '• **Find** nearby assistance centers\n\n'
+      '• Discover government schemes suitable for you\n'
+      '• Check your eligibility for specific schemes\n'
+      '• Understand application procedures\n'
+      '• Find nearby assistance centers\n\n'
       'Tell me about yourself or ask me about any government scheme!',
     ));
   }
@@ -62,11 +53,11 @@ class AiProvider extends ChangeNotifier {
             '$userMessage\n\n[User Context: ${user.profileSummary}]';
       }
 
-      final response = await _geminiService.sendMessage(contextualMessage);
-      _messages.removeLast(); // remove loading
+      final response = await _geminiService.getAIResponse(contextualMessage);
+      _messages.removeWhere((m) => m.isLoading);
       _messages.add(ChatMessage.assistant(response));
     } catch (e) {
-      _messages.removeLast();
+      _messages.removeWhere((m) => m.isLoading);
       _messages.add(ChatMessage.error(
         'Sorry, I encountered an error. Please try again.\n${e.toString()}',
       ));
@@ -78,24 +69,9 @@ class AiProvider extends ChangeNotifier {
   }
 
   Future<void> getPersonalizedRecommendations(UserModel user) async {
-    _messages.add(ChatMessage.user(
-      'Please recommend government schemes based on my profile.',
-    ));
-    _messages.add(ChatMessage.loading());
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final response = await _geminiService.getSchemeRecommendations(user);
-      _messages.removeLast();
-      _messages.add(ChatMessage.assistant(response));
-    } catch (e) {
-      _messages.removeLast();
-      _messages.add(ChatMessage.error('Failed to get recommendations: $e'));
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final prompt =
+        'Recommend top 5 Indian government schemes for: ${user.profileSummary}';
+    await sendMessage(prompt, user: user);
   }
 
   Future<String?> checkEligibility({
@@ -107,11 +83,13 @@ class AiProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _geminiService.checkEligibility(
-        schemeName: scheme.name,
-        user: user,
-        eligibilityCriteria: scheme.eligibilityCriteria,
-      );
+      final prompt = '''
+Check eligibility for "${scheme.name}".
+Eligibility: ${scheme.eligibility}
+User: ${user.profileSummary}
+Provide: eligibility status, matching criteria, gaps, and next steps.
+''';
+      final result = await _geminiService.getAIResponse(prompt);
       _eligibilityResult = result;
       return result;
     } catch (e) {
@@ -125,10 +103,9 @@ class AiProvider extends ChangeNotifier {
 
   Future<String?> explainScheme(SchemeModel scheme) async {
     try {
-      return await _geminiService.explainScheme(
-        scheme.name,
-        scheme.description,
-      );
+      final prompt =
+          'Explain "${scheme.name}" in simple, friendly language. Benefits: ${scheme.benefits}';
+      return await _geminiService.getAIResponse(prompt);
     } catch (e) {
       return null;
     }
@@ -136,7 +113,6 @@ class AiProvider extends ChangeNotifier {
 
   void clearChat() {
     _messages.clear();
-    _geminiService.startNewChat();
     _addWelcomeMessage();
     _error = null;
     notifyListeners();
