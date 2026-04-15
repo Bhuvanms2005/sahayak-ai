@@ -34,12 +34,14 @@ class AppTheme {
           fontWeight: FontWeight.w800,
         ),
       ),
-      cardTheme: CardTheme(
-        elevation: 0,
-        color: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      cardTheme: const CardThemeData(
+  elevation: 0,
+  color: Colors.white,
+  surfaceTintColor: Colors.white,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(8)),
+  ),
+),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,

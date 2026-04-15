@@ -8,12 +8,26 @@ import 'providers/auth_provider.dart';
 import 'providers/chatbot_provider.dart';
 import 'providers/eligibility_provider.dart';
 import 'providers/scheme_provider.dart';
+import 'providers/ai_provider.dart';
 import 'routes/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env').catchError((_) {});
-  await Firebase.initializeApp().catchError((_) => null);
+
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('Warning: .env file not found.');
+  }
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
+
   runApp(const SahayakAI());
 }
 
@@ -25,9 +39,12 @@ class SahayakAI extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SchemeProvider()..loadSchemes()),
+        ChangeNotifierProvider(
+          create: (_) => SchemeProvider()..loadSchemes(),
+        ),
         ChangeNotifierProvider(create: (_) => ChatbotProvider()),
         ChangeNotifierProvider(create: (_) => EligibilityProvider()),
+        ChangeNotifierProvider(create: (_) => AiProvider()),
       ],
       child: Builder(
         builder: (context) {
