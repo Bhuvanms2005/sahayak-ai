@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../widgets/common_widgets.dart';
+import '../../providers/language_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,71 +14,129 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
-  int _index = 0;
+  int _page = 0;
 
-  final _pages = const [
-    _OnboardingPage(
-      icon: Icons.search_rounded,
-      title: 'Find benefits made for you',
-      text: 'Search schemes by need, category, age, income, occupation, and state.',
+  static const _pages = [
+    _OnboardPage(
+      icon: Icons.travel_explore_rounded,
+      title: 'Discover Schemes',
+      body:
+          'Access hundreds of government welfare schemes for education, health, housing, agriculture and more — all in one place.',
     ),
-    _OnboardingPage(
-      icon: Icons.fact_check_rounded,
-      title: 'Check eligibility with clarity',
-      text: 'Understand likely matches, missing details, and documents before applying.',
-    ),
-    _OnboardingPage(
+    _OnboardPage(
       icon: Icons.smart_toy_rounded,
-      title: 'Ask Sahayak AI anytime',
-      text: 'Get guided recommendations and application steps in simple language.',
+      title: 'AI-Powered Assistant',
+      body:
+          'Ask Sahayak AI anything about eligibility, documents, or how to apply. Get instant, personalized answers in your language.',
+    ),
+    _OnboardPage(
+      icon: Icons.track_changes_rounded,
+      title: 'Track Your Applications',
+      body:
+          'Never lose track of an application. Monitor status, set reminders, and get notified about deadlines.',
+    ),
+    _OnboardPage(
+      icon: Icons.language_rounded,
+      title: 'Your Language, Your Way',
+      body:
+          'Sahayak AI supports 10 Indian languages. Switch anytime and interact in the language you\'re most comfortable with.',
     ),
   ];
 
+  void _next() {
+    if (_page < _pages.length - 1) {
+      _controller.nextPage(
+          duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
+    } else {
+      // Go to language selection before login
+      context.go('/language-select?onboarding=true');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
+
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.teal],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
           child: Column(
             children: [
+              // Skip
               Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(onPressed: () => context.go('/login'), child: const Text('Skip')),
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: () =>
+                      context.go('/language-select?onboarding=true'),
+                  child: const Text('Skip',
+                      style: TextStyle(color: Colors.white70)),
+                ),
               ),
+
+              // Pages
               Expanded(
-                child: PageView(
+                child: PageView.builder(
                   controller: _controller,
-                  onPageChanged: (value) => setState(() => _index = value),
-                  children: _pages,
+                  itemCount: _pages.length,
+                  onPageChanged: (i) => setState(() => _page = i),
+                  itemBuilder: (_, i) => _pages[i],
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _pages.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: i == _index ? 28 : 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                      color: i == _index ? AppTheme.primary : AppTheme.primary.withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(8),
+
+              // Dots + button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: Column(
+                  children: [
+                    // Page dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _pages.length,
+                        (i) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: i == _page ? 28 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: i == _page
+                                ? Colors.white
+                                : Colors.white38,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: FilledButton(
+                        onPressed: _next,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppTheme.primary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          _page == _pages.length - 1
+                              ? lang.t('continueBtn')
+                              : 'Next',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w900, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 26),
-              PrimaryButton(
-                label: _index == _pages.length - 1 ? 'Get Started' : 'Continue',
-                onPressed: () {
-                  if (_index == _pages.length - 1) {
-                    context.go('/login');
-                  } else {
-                    _controller.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
-                  }
-                },
               ),
             ],
           ),
@@ -87,36 +146,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class _OnboardingPage extends StatelessWidget {
-  const _OnboardingPage({required this.icon, required this.title, required this.text});
-
+class _OnboardPage extends StatelessWidget {
+  const _OnboardPage({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
   final IconData icon;
   final String title;
-  final String text;
+  final String body;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 170,
-          height: 170,
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Icon(icon, color: Colors.white, size: 60),
           ),
-          child: Icon(icon, size: 86, color: AppTheme.primary),
-        ),
-        const SizedBox(height: 40),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 14),
-        Text(text, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, height: 1.55)),
-      ],
+          const SizedBox(height: 36),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                height: 1.2),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: Colors.white70, fontSize: 15, height: 1.6),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -7,6 +7,7 @@ class AppTheme {
   static const teal = Color(0xFF00A896);
   static const saffron = Color(0xFFFFB703);
   static const coral = Color(0xFFE85D75);
+  static const error = coral;
   static const ink = Color(0xFF172033);
   static const muted = Color(0xFF667085);
   static const bgColor = Color(0xFFF6F8FC);

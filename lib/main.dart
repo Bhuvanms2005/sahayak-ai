@@ -4,15 +4,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
+import 'providers/ai_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/chatbot_provider.dart';
 import 'providers/eligibility_provider.dart';
+import 'providers/language_provider.dart';
 import 'providers/scheme_provider.dart';
-import 'providers/ai_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/tracker_provider.dart';
 import 'routes/app_router.dart';
-// Uncomment after configuring Firebase with FlutterFire CLI
-// import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,12 +26,6 @@ Future<void> main() async {
 
   // Initialize Firebase safely
   try {
-    // Recommended after running `flutterfire configure`
-    // await Firebase.initializeApp(
-    //   options: DefaultFirebaseOptions.currentPlatform,
-    // );
-
-    // Temporary initialization (works if Firebase is configured natively)
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
@@ -48,13 +42,13 @@ class SahayakAI extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(
-          create: (_) => SchemeProvider()..loadSchemes(),
-        ),
+        ChangeNotifierProvider(create: (_) => SchemeProvider()..loadSchemes()),
         ChangeNotifierProvider(create: (_) => ChatbotProvider()),
         ChangeNotifierProvider(create: (_) => EligibilityProvider()),
         ChangeNotifierProvider(create: (_) => AiProvider()),
+        ChangeNotifierProvider(create: (_) => TrackerProvider()),
       ],
       child: Builder(
         builder: (context) {

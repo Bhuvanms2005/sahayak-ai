@@ -8,16 +8,19 @@ import '../features/auth/signup_screen.dart';
 import '../features/chatbot/chatbot_screen.dart';
 import '../features/eligibility/eligibility_screen.dart';
 import '../features/home/main_navigation.dart';
+import '../features/language/language_selection_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/profile/complete_profile_screen.dart';
 import '../features/schemes/scheme_detail_screen.dart';
 import '../features/splash/splash_screen.dart';
+import '../features/tracker/tracker_screen.dart';
 import '../models/scheme_model.dart';
 import '../providers/auth_provider.dart';
 
 class AppRouter {
   static const splash = '/';
   static const onboarding = '/onboarding';
+  static const languageSelect = '/language-select';
   static const login = '/login';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
@@ -26,6 +29,7 @@ class AppRouter {
   static const chatbot = '/chatbot';
   static const eligibility = '/eligibility';
   static const completeProfile = '/complete-profile';
+  static const tracker = '/tracker';
 
   static GoRouter createRouter(BuildContext context) {
     return GoRouter(
@@ -34,18 +38,40 @@ class AppRouter {
       redirect: (context, state) {
         final auth = Provider.of<AuthProvider>(context, listen: false);
         final location = state.matchedLocation;
-        final publicRoutes = {splash, onboarding, login, signup, forgotPassword};
+        final publicRoutes = {
+          splash,
+          onboarding,
+          languageSelect,
+          login,
+          signup,
+          forgotPassword
+        };
         if (auth.status == AuthStatus.initial) return null;
-        if (!auth.isAuthenticated && !publicRoutes.contains(location)) return login;
-        if (auth.isAuthenticated && {login, signup, onboarding}.contains(location)) return home;
+        if (!auth.isAuthenticated && !publicRoutes.contains(location)) {
+          return login;
+        }
+        if (auth.isAuthenticated &&
+            {login, signup, onboarding}.contains(location)) {
+          return home;
+        }
         return null;
       },
       routes: [
         GoRoute(path: splash, builder: (_, __) => const SplashScreen()),
         GoRoute(path: onboarding, builder: (_, __) => const OnboardingScreen()),
+        GoRoute(
+          path: languageSelect,
+          builder: (_, state) {
+            final isOnboarding =
+                state.uri.queryParameters['onboarding'] == 'true';
+            return LanguageSelectionScreen(isOnboarding: isOnboarding);
+          },
+        ),
         GoRoute(path: login, builder: (_, __) => const LoginScreen()),
         GoRoute(path: signup, builder: (_, __) => const SignupScreen()),
-        GoRoute(path: forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
+        GoRoute(
+            path: forgotPassword,
+            builder: (_, __) => const ForgotPasswordScreen()),
         GoRoute(path: home, builder: (_, __) => const MainNavigation()),
         GoRoute(
           path: schemeDetail,
@@ -57,9 +83,13 @@ class AppRouter {
         GoRoute(path: chatbot, builder: (_, __) => const ChatbotScreen()),
         GoRoute(
           path: eligibility,
-          builder: (_, state) => EligibilityScreen(scheme: state.extra as SchemeModel?),
+          builder: (_, state) =>
+              EligibilityScreen(scheme: state.extra as SchemeModel?),
         ),
-        GoRoute(path: completeProfile, builder: (_, __) => const CompleteProfileScreen()),
+        GoRoute(
+            path: completeProfile,
+            builder: (_, __) => const CompleteProfileScreen()),
+        GoRoute(path: tracker, builder: (_, __) => const TrackerScreen()),
       ],
     );
   }
