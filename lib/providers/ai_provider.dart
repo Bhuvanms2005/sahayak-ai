@@ -6,14 +6,13 @@ import '../models/scheme_model.dart';
 import '../models/user_model.dart';
 
 class AiProvider extends ChangeNotifier {
-  // Uses the actual GeminiService from core/services (no singleton .instance)
-  final GeminiService _geminiService = GeminiService();
-
+  GeminiService _geminiService = GeminiService();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   String? _error;
   String? _eligibilityResult;
   bool _isCheckingEligibility = false;
+  String _currentLanguageCode = 'en';
 
   List<ChatMessage> get messages => List.unmodifiable(_messages);
   bool get isLoading => _isLoading;
@@ -35,6 +34,13 @@ class AiProvider extends ChangeNotifier {
       '• Find nearby assistance centers\n\n'
       'Tell me about yourself or ask me about any government scheme!',
     ));
+  }
+
+  /// Updates the language so the next Gemini call uses the correct system prompt.
+  void updateLanguage(String languageCode) {
+    if (_currentLanguageCode == languageCode) return;
+    _currentLanguageCode = languageCode;
+    _geminiService = GeminiService(languageCode: languageCode);
   }
 
   Future<void> sendMessage(String userMessage, {UserModel? user}) async {
@@ -85,9 +91,9 @@ class AiProvider extends ChangeNotifier {
     try {
       final prompt = '''
 Check eligibility for "${scheme.name}".
-Eligibility: ${scheme.eligibility}
-User: ${user.profileSummary}
-Provide: eligibility status, matching criteria, gaps, and next steps.
+Eligibility criteria: ${scheme.eligibility}
+User profile: ${user.profileSummary}
+Please provide: eligibility status, matching criteria, gaps, required documents, and next steps.
 ''';
       final result = await _geminiService.getAIResponse(prompt);
       _eligibilityResult = result;
@@ -104,7 +110,8 @@ Provide: eligibility status, matching criteria, gaps, and next steps.
   Future<String?> explainScheme(SchemeModel scheme) async {
     try {
       final prompt =
-          'Explain "${scheme.name}" in simple, friendly language. Benefits: ${scheme.benefits}';
+          'Explain "${scheme.name}" in simple, friendly language for a first-time applicant. '
+          'Benefits: ${scheme.benefits}. How to apply: ${scheme.applicationMode}.';
       return await _geminiService.getAIResponse(prompt);
     } catch (e) {
       return null;

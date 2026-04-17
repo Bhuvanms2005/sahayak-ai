@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../models/scheme_model.dart';
 
+// ─── PrimaryButton ────────────────────────────────────────────────────────────
+
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,
@@ -28,17 +30,21 @@ class PrimaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
               )
             : Icon(icon ?? Icons.arrow_forward_rounded),
         label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
         style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
   }
 }
+
+// ─── AppTextField ─────────────────────────────────────────────────────────────
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -51,6 +57,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.validator,
     this.maxLines = 1,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -61,6 +68,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final int maxLines;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +78,7 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       maxLines: maxLines,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -78,6 +87,8 @@ class AppTextField extends StatelessWidget {
     );
   }
 }
+
+// ─── SchemeCard ───────────────────────────────────────────────────────────────
 
 class SchemeCard extends StatelessWidget {
   const SchemeCard({
@@ -95,19 +106,25 @@ class SchemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppTheme.surfaceDark : Colors.white;
+    final shadowColor = isDark
+        ? Colors.black.withOpacity(0.3)
+        : AppTheme.ink.withOpacity(0.07);
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.ink.withOpacity(0.08),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: shadowColor,
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -120,35 +137,63 @@ class SchemeCard extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: onSave,
-                  icon: Icon(isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded),
+                  icon: Icon(
+                    isSaved
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                  ),
                   color: isSaved ? AppTheme.saffron : AppTheme.muted,
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               scheme.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w900),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               scheme.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.muted, height: 1.45),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.muted,
+                    height: 1.45,
+                  ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Row(
               children: [
-                const Icon(Icons.verified_user_outlined, size: 18, color: AppTheme.teal),
+                const Icon(Icons.verified_user_outlined,
+                    size: 16, color: AppTheme.teal),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     scheme.applicationMode,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text('${scheme.popularity}% match', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900)),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${scheme.popularity}% match',
+                    style: const TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12),
+                  ),
+                ),
               ],
             ),
           ],
@@ -157,6 +202,8 @@ class SchemeCard extends StatelessWidget {
     );
   }
 }
+
+// ─── CategoryChip ─────────────────────────────────────────────────────────────
 
 class CategoryChip extends StatelessWidget {
   const CategoryChip({
@@ -181,14 +228,26 @@ class CategoryChip extends StatelessWidget {
         labelStyle: TextStyle(
           color: selected ? Colors.white : AppTheme.ink,
           fontWeight: FontWeight.w800,
+          fontSize: 13,
         ),
         selectedColor: AppTheme.primary,
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? AppTheme.surfaceDark
+                : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        side: BorderSide(
+          color: selected
+              ? AppTheme.primary
+              : Colors.grey.withOpacity(0.2),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
       ),
     );
   }
 }
+
+// ─── EmptyState ───────────────────────────────────────────────────────────────
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -210,11 +269,29 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: AppTheme.primary),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(icon, size: 52, color: AppTheme.primary),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w900),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.muted, height: 1.5),
+            ),
           ],
         ),
       ),
@@ -222,18 +299,23 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+// ─── LoadingShimmer ───────────────────────────────────────────────────────────
+
 class LoadingShimmer extends StatelessWidget {
   const LoadingShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       itemBuilder: (_, __) => Container(
         height: 150,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(8),
+          color: isDark
+              ? AppTheme.surfaceDark.withOpacity(0.8)
+              : Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
       separatorBuilder: (_, __) => const SizedBox(height: 16),
@@ -242,22 +324,26 @@ class LoadingShimmer extends StatelessWidget {
   }
 }
 
+// ─── _CategoryBadge ───────────────────────────────────────────────────────────
+
 class _CategoryBadge extends StatelessWidget {
   const _CategoryBadge({required this.category});
-
   final String category;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppTheme.primary.withOpacity(0.09),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         category,
-        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900, fontSize: 12),
+        style: const TextStyle(
+            color: AppTheme.primary,
+            fontWeight: FontWeight.w900,
+            fontSize: 12),
       ),
     );
   }

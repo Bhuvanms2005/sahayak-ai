@@ -54,6 +54,11 @@ class SahayakAI extends StatelessWidget {
         builder: (context) {
           final themeProvider = context.watch<ThemeProvider>();
 
+          // Keep ChatbotProvider and AiProvider in sync whenever language changes.
+          final lang = context.watch<LanguageProvider>();
+          context.read<ChatbotProvider>().updateLanguage(lang.currentCode);
+          context.read<AiProvider>().updateLanguage(lang.currentCode);
+
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             title: 'Sahayak AI',
