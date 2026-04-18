@@ -9,6 +9,7 @@ import '../features/chatbot/chatbot_screen.dart';
 import '../features/eligibility/eligibility_screen.dart';
 import '../features/home/main_navigation.dart';
 import '../features/language/language_selection_screen.dart';
+import '../features/notifications/notifications_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/profile/complete_profile_screen.dart';
 import '../features/schemes/scheme_detail_screen.dart';
@@ -30,6 +31,7 @@ class AppRouter {
   static const eligibility = '/eligibility';
   static const completeProfile = '/complete-profile';
   static const tracker = '/tracker';
+  static const notifications = '/notifications'; // ← NEW
 
   static GoRouter createRouter(BuildContext context) {
     return GoRouter(
@@ -44,7 +46,7 @@ class AppRouter {
           languageSelect,
           login,
           signup,
-          forgotPassword
+          forgotPassword,
         };
         if (auth.status == AuthStatus.initial) return null;
         if (!auth.isAuthenticated && !publicRoutes.contains(location)) {
@@ -58,7 +60,8 @@ class AppRouter {
       },
       routes: [
         GoRoute(path: splash, builder: (_, __) => const SplashScreen()),
-        GoRoute(path: onboarding, builder: (_, __) => const OnboardingScreen()),
+        GoRoute(
+            path: onboarding, builder: (_, __) => const OnboardingScreen()),
         GoRoute(
           path: languageSelect,
           builder: (_, state) {
@@ -90,6 +93,10 @@ class AppRouter {
             path: completeProfile,
             builder: (_, __) => const CompleteProfileScreen()),
         GoRoute(path: tracker, builder: (_, __) => const TrackerScreen()),
+        // ── NEW ──────────────────────────────────────────────────────────────
+        GoRoute(
+            path: notifications,
+            builder: (_, __) => const NotificationsScreen()),
       ],
     );
   }

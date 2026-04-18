@@ -9,6 +9,7 @@ import 'providers/auth_provider.dart';
 import 'providers/chatbot_provider.dart';
 import 'providers/eligibility_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'providers/scheme_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/tracker_provider.dart';
@@ -17,14 +18,12 @@ import 'routes/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
   try {
     await dotenv.load(fileName: '.env');
   } catch (e) {
     debugPrint('Warning: .env file not found. $e');
   }
 
-  // Initialize Firebase safely
   try {
     await Firebase.initializeApp();
   } catch (e) {
@@ -49,12 +48,14 @@ class SahayakAI extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EligibilityProvider()),
         ChangeNotifierProvider(create: (_) => AiProvider()),
         ChangeNotifierProvider(create: (_) => TrackerProvider()),
+        ChangeNotifierProvider(
+            create: (_) => NotificationsProvider()), // ← NEW
       ],
       child: Builder(
         builder: (context) {
           final themeProvider = context.watch<ThemeProvider>();
 
-          // Keep ChatbotProvider and AiProvider in sync whenever language changes.
+          // Keep ChatbotProvider and AiProvider language in sync
           final lang = context.watch<LanguageProvider>();
           context.read<ChatbotProvider>().updateLanguage(lang.currentCode);
           context.read<AiProvider>().updateLanguage(lang.currentCode);

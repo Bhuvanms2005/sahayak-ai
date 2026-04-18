@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     final lang = context.read<LanguageProvider>();
     if (lang.hasSelectedLanguage) {
-      context.go('/onboarding');
+      context.go('/login');
     } else {
       context.go('/onboarding');
     }

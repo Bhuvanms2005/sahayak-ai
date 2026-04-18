@@ -8,6 +8,7 @@ import '../../models/scheme_model.dart';
 import '../../models/tracked_application.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
+import '../../providers/notifications_provider.dart';
 import '../../providers/scheme_provider.dart';
 import '../../providers/tracker_provider.dart';
 
@@ -27,6 +28,7 @@ class SchemeDetailScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final tracker = context.watch<TrackerProvider>();
     final lang = context.watch<LanguageProvider>();
+    final notifs = context.read<NotificationsProvider>();
 
     final s = scheme ?? schemes.byId(schemeId);
     if (s == null) {
@@ -52,14 +54,26 @@ class SchemeDetailScreen extends StatelessWidget {
               title: Text(
                 s.name,
                 style: const TextStyle(
-                    fontWeight: FontWeight.w900, fontSize: 15),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                          color: Colors.black38,
+                          blurRadius: 4,
+                          offset: Offset(0, 1))
+                    ]),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.teal],
+                    colors: [
+                      AppTheme.primaryDark,
+                      AppTheme.primary,
+                      AppTheme.teal
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -71,20 +85,26 @@ class SchemeDetailScreen extends StatelessWidget {
                       const SizedBox(height: 40),
                       _CategoryBadge(category: s.category),
                       const SizedBox(height: 12),
-                      Text('${s.popularity}% match',
-                          style: const TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w800)),
+                      Text(
+                        '${s.popularity}% match',
+                        style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w800),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+            // Force icon colours to always be white over the gradient
+            iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
                 onPressed: () => schemes.toggleSave(userId, s.id),
                 icon: Icon(
-                  isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                  isSaved
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
                   color: isSaved ? AppTheme.saffron : Colors.white,
                 ),
               ),
@@ -104,12 +124,20 @@ class SchemeDetailScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
-                  // Description
+                  // About
                   _SectionCard(
                     title: 'About this Scheme',
                     icon: Icons.info_outline_rounded,
-                    child: Text(s.description,
-                        style: const TextStyle(height: 1.6, fontSize: 14)),
+                    child: Text(
+                      s.description,
+                      style: TextStyle(
+                        height: 1.6,
+                        fontSize: 14,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.85)
+                            : AppTheme.ink,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 14),
 
@@ -118,8 +146,16 @@ class SchemeDetailScreen extends StatelessWidget {
                     title: lang.t('benefits'),
                     icon: Icons.card_giftcard_rounded,
                     iconColor: AppTheme.teal,
-                    child: Text(s.benefits,
-                        style: const TextStyle(height: 1.6, fontSize: 14)),
+                    child: Text(
+                      s.benefits,
+                      style: TextStyle(
+                        height: 1.6,
+                        fontSize: 14,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.85)
+                            : AppTheme.ink,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 14),
 
@@ -128,8 +164,16 @@ class SchemeDetailScreen extends StatelessWidget {
                     title: 'Eligibility Criteria',
                     icon: Icons.verified_user_outlined,
                     iconColor: AppTheme.primary,
-                    child: Text(s.eligibility,
-                        style: const TextStyle(height: 1.6, fontSize: 14)),
+                    child: Text(
+                      s.eligibility,
+                      style: TextStyle(
+                        height: 1.6,
+                        fontSize: 14,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.85)
+                            : AppTheme.ink,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 14),
 
@@ -142,14 +186,29 @@ class SchemeDetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: s.documents
                           .map((doc) => Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
+                                padding: const EdgeInsets.only(bottom: 8),
                                 child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.check_circle_outline,
-                                        size: 16, color: AppTheme.teal),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: Text(doc,
-                                        style: const TextStyle(fontSize: 14))),
+                                    const Icon(
+                                        Icons.check_circle_outline,
+                                        size: 16,
+                                        color: AppTheme.teal),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        doc,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                                  .withOpacity(0.85)
+                                              : AppTheme.ink,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ))
@@ -164,8 +223,10 @@ class SchemeDetailScreen extends StatelessWidget {
                     icon: Icons.more_horiz_rounded,
                     child: Column(
                       children: [
-                        _InfoRow(label: lang.t('ministry'), value: s.ministry),
-                        _InfoRow(label: lang.t('deadline'), value: s.deadline),
+                        _InfoRow(
+                            label: lang.t('ministry'), value: s.ministry),
+                        _InfoRow(
+                            label: lang.t('deadline'), value: s.deadline),
                         _InfoRow(
                             label: lang.t('targetGroup'),
                             value: s.targetGroups.join(', ')),
@@ -177,21 +238,23 @@ class SchemeDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Action buttons
+                  // ── Action buttons ──────────────────────────────
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () =>
                               context.push('/eligibility', extra: s),
-                          icon: const Icon(Icons.fact_check_rounded),
+                          icon: const Icon(Icons.fact_check_rounded,
+                              size: 18),
                           label: Text(lang.t('checkEligibility'),
                               style: const TextStyle(fontSize: 13)),
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                                borderRadius:
+                                    BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12),
                           ),
                         ),
                       ),
@@ -202,8 +265,7 @@ class SchemeDetailScreen extends StatelessWidget {
                             try {
                               await launchUrl(
                                   Uri.parse('https://www.india.gov.in'),
-                                  mode:
-                                      LaunchMode.externalApplication);
+                                  mode: LaunchMode.externalApplication);
                             } catch (_) {}
                           },
                           icon: const Icon(Icons.open_in_new_rounded,
@@ -212,9 +274,10 @@ class SchemeDetailScreen extends StatelessWidget {
                               style: const TextStyle(fontSize: 13)),
                           style: FilledButton.styleFrom(
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                                borderRadius:
+                                    BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12),
                           ),
                         ),
                       ),
@@ -222,7 +285,7 @@ class SchemeDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Track button
+                  // ── Track button ────────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -235,6 +298,8 @@ class SchemeDetailScreen extends StatelessWidget {
                             schemeName: s.name,
                             category: s.category,
                           );
+                          // Also create a notification
+                          notifs.addTrackerNotification(s.name);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(SnackBar(
@@ -256,14 +321,14 @@ class SchemeDetailScreen extends StatelessWidget {
                       ),
                       label: Text(
                         isTracked
-                            ? 'View in Tracker  (${trackedApp?.status.emoji} ${trackedApp?.status.label})'
+                            ? 'View in Tracker  '
+                                '(${trackedApp?.status.emoji} ${trackedApp?.status.label})'
                             : lang.t('addToTracker'),
                         style: const TextStyle(fontSize: 13),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isTracked
-                            ? AppTheme.teal
-                            : AppTheme.primary,
+                        foregroundColor:
+                            isTracked ? AppTheme.teal : AppTheme.primary,
                         side: BorderSide(
                             color: isTracked
                                 ? AppTheme.teal
@@ -285,6 +350,8 @@ class SchemeDetailScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Tracker Status Card ──────────────────────────────────────────────────────
 
 class _TrackerStatusCard extends StatelessWidget {
   const _TrackerStatusCard({required this.app, required this.lang});
@@ -308,27 +375,32 @@ class _TrackerStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _color().withOpacity(0.08),
+        color: _color().withOpacity(isDark ? 0.12 : 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _color().withOpacity(0.25)),
+        border: Border.all(color: _color().withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          Text(app.status.emoji, style: const TextStyle(fontSize: 22)),
+          Text(app.status.emoji,
+              style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Application Status',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900, fontSize: 13)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        color: isDark ? Colors.white : AppTheme.ink)),
                 Text(app.status.label,
                     style: TextStyle(
-                        color: _color(), fontWeight: FontWeight.w700)),
+                        color: _color(),
+                        fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -342,6 +414,8 @@ class _TrackerStatusCard extends StatelessWidget {
   }
 }
 
+// ─── Section Card ─────────────────────────────────────────────────────────────
+
 class _SectionCard extends StatelessWidget {
   const _SectionCard({
     required this.title,
@@ -349,6 +423,7 @@ class _SectionCard extends StatelessWidget {
     required this.child,
     this.iconColor,
   });
+
   final String title;
   final IconData icon;
   final Widget child;
@@ -356,14 +431,24 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // In dark mode use surfaceDark; in light mode use white
+    final cardColor =
+        isDark ? AppTheme.surfaceDark : Colors.white;
+    final shadowColor = isDark
+        ? Colors.black.withOpacity(0.25)
+        : Colors.black.withOpacity(0.05);
+    final titleColor =
+        isDark ? Colors.white : AppTheme.ink;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: shadowColor,
               blurRadius: 16,
               offset: const Offset(0, 6)),
         ],
@@ -373,20 +458,30 @@ class _SectionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor ?? AppTheme.primary, size: 18),
+              Icon(icon,
+                  color: iconColor ?? AppTheme.primary, size: 18),
               const SizedBox(width: 8),
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w900, fontSize: 14)),
+              Text(
+                title,
+                style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    color: titleColor),
+              ),
             ],
           ),
-          const Divider(height: 16),
+          Divider(
+            height: 16,
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
           child,
         ],
       ),
     );
   }
 }
+
+// ─── Info Row ─────────────────────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
@@ -395,29 +490,39 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 120,
-            child: Text(label,
-                style: const TextStyle(
-                    color: AppTheme.muted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                  color: AppTheme.muted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700)),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white.withOpacity(0.9) : AppTheme.ink,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+// ─── Category Badge ───────────────────────────────────────────────────────────
 
 class _CategoryBadge extends StatelessWidget {
   const _CategoryBadge({required this.category});
@@ -426,7 +531,8 @@ class _CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),

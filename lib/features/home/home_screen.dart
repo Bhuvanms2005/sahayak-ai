@@ -6,6 +6,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
+import '../../providers/notifications_provider.dart';
 import '../../providers/scheme_provider.dart';
 import '../../widgets/common_widgets.dart';
 
@@ -17,6 +18,7 @@ class HomeScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final schemes = context.watch<SchemeProvider>();
     final lang = context.watch<LanguageProvider>();
+    final notifs = context.watch<NotificationsProvider>();
     final userId = auth.user?.uid ?? 'demo-user';
 
     return RefreshIndicator(
@@ -30,7 +32,11 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.teal],
+                  colors: [
+                    AppTheme.primaryDark,
+                    AppTheme.primary,
+                    AppTheme.teal
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -50,7 +56,8 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${lang.t('hello')}, ${auth.user?.name.split(' ').first ?? 'Citizen'} 👋',
+                          '${lang.t('hello')}, '
+                          '${auth.user?.name.split(' ').first ?? 'Citizen'} 👋',
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
@@ -59,7 +66,8 @@ class HomeScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w900),
                         ),
                       ),
-                      // Language indicator button
+
+                      // ── Language badge ────────────────────────────
                       GestureDetector(
                         onTap: () => context.push('/language-select'),
                         child: Container(
@@ -87,7 +95,48 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+
+                      // ── Notification bell with badge ──────────────
+                      const SizedBox(width: 4),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            onPressed: () =>
+                                context.push('/notifications'),
+                            icon: const Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white),
+                            tooltip: lang.t('notifications'),
+                          ),
+                          if (notifs.unreadCount > 0)
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: Container(
+                                width: 16,
+                                height: 16,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    notifs.unreadCount > 9
+                                        ? '9+'
+                                        : '${notifs.unreadCount}',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                      // ── AI chatbot button ─────────────────────────
                       IconButton(
                         onPressed: () => context.push('/chatbot'),
                         icon: const Icon(Icons.smart_toy_rounded,
@@ -118,11 +167,13 @@ class HomeScreen extends StatelessWidget {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white30),
+                        borderSide:
+                            const BorderSide(color: Colors.white30),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white70),
+                        borderSide:
+                            const BorderSide(color: Colors.white70),
                       ),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.1),
@@ -139,12 +190,15 @@ class HomeScreen extends StatelessWidget {
               height: 46,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16),
                 children: AppConstants.categories
                     .map((category) => CategoryChip(
                           label: category,
-                          selected: schemes.selectedCategory == category,
-                          onTap: () => schemes.setCategory(category),
+                          selected:
+                              schemes.selectedCategory == category,
+                          onTap: () =>
+                              schemes.setCategory(category),
                         ))
                     .toList(),
               ),
@@ -154,7 +208,8 @@ class HomeScreen extends StatelessWidget {
           // ── Section header ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+              padding:
+                  const EdgeInsets.fromLTRB(16, 22, 16, 12),
               child: Row(
                 children: [
                   Text(
@@ -188,7 +243,8 @@ class HomeScreen extends StatelessWidget {
           else
             SliverList.separated(
               itemCount: schemes.filteredSchemes.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final scheme = schemes.filteredSchemes[index];
                 return Padding(
@@ -196,13 +252,18 @@ class HomeScreen extends StatelessWidget {
                       16,
                       0,
                       16,
-                      index == schemes.filteredSchemes.length - 1 ? 24 : 0),
+                      index ==
+                              schemes.filteredSchemes.length - 1
+                          ? 24
+                          : 0),
                   child: SchemeCard(
                     scheme: scheme,
                     isSaved: schemes.isSaved(scheme.id),
-                    onSave: () => schemes.toggleSave(userId, scheme.id),
-                    onTap: () =>
-                        context.push('/scheme/${scheme.id}', extra: scheme),
+                    onSave: () =>
+                        schemes.toggleSave(userId, scheme.id),
+                    onTap: () => context.push(
+                        '/scheme/${scheme.id}',
+                        extra: scheme),
                   ),
                 );
               },

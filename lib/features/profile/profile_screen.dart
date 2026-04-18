@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
+import '../../providers/notifications_provider.dart';
 import '../../providers/scheme_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/tracker_provider.dart';
@@ -20,6 +21,7 @@ class ProfileScreen extends StatelessWidget {
     final theme = context.watch<ThemeProvider>();
     final lang = context.watch<LanguageProvider>();
     final tracker = context.watch<TrackerProvider>();
+    final notifs = context.watch<NotificationsProvider>();
     final user = auth.user;
 
     return Scaffold(
@@ -86,11 +88,36 @@ class ProfileScreen extends StatelessWidget {
               activeColor: AppTheme.primary,
             ),
           ),
+          // ── Notifications tile now navigates to the notifications screen ──
           _SettingsTile(
             icon: Icons.notifications_outlined,
             title: lang.t('notifications'),
-            onTap: () {},
-            trailing: const Icon(Icons.chevron_right_rounded),
+            // Show unread count as a badge if there are any
+            trailing: notifs.unreadCount > 0
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.error,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${notifs.unreadCount}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  )
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push('/notifications'),
           ),
           _SettingsTile(
             icon: Icons.help_outline_rounded,
@@ -114,8 +141,7 @@ class ProfileScreen extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.bookmark, color: AppTheme.saffron),
                   title: Text(scheme.name,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text(scheme.category),
                   onTap: () =>
                       context.push('/scheme/${scheme.id}', extra: scheme),
@@ -136,10 +162,10 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Center(
+          const Center(
             child: Text(
               'Sahayak AI v1.1.0 · IntelliFusion',
-              style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+              style: TextStyle(color: AppTheme.muted, fontSize: 12),
             ),
           ),
         ],
@@ -147,6 +173,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Widgets (unchanged in behaviour, kept local) ─────────────────────────────
 
 class _UserCard extends StatelessWidget {
   const _UserCard({required this.user, required this.lang});
@@ -201,7 +229,8 @@ class _UserCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   user?.email ?? 'demo@sahayak.ai',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  style:
+                      const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
                 if (user?.state != null) ...[
                   const SizedBox(height: 4),
@@ -295,9 +324,9 @@ class _SettingsTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppTheme.primary, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle:
-          subtitle != null ? Text(subtitle!) : null,
+      title:
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: subtitle != null ? Text(subtitle!) : null,
       trailing: trailing,
       onTap: onTap,
     );
